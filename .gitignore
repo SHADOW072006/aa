@@ -1,0 +1,44 @@
+# Environment & secrets
+.env
+backend/.env
+*.env.local
+
+# Databases & Telegram sessions
+*.db
+*.db-wal
+*.db-shm
+*.db-journal
+*.sqlite
+*.sqlite3
+backups/
+backend/backups/
+monitor_session*
+*.session
+*.session-journal
+
+# Collected media, exports, reports & local analyst overlays
+media/
+backend/media/
+backend/backups/
+exports/
+reports/*.pdf
+deliverables/*.pdf
+backend/deliverables/*.pdf
+data/local/
+
+# Trained ML models
+data/models/*.joblib
+*.joblib
+*.pkl
+
+# Python & Node build/test artifacts
+__pycache__/
+*.pyc
+*.pyo
+.venv/
+.pytest_cache/
+.hypothesis/
+node_modules/
+frontend/dist/
+frontend/.temp/
+

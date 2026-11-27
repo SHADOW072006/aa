@@ -1,0 +1,5 @@
+# Optional OCR extras (not needed for the core backend).
+# Image OCR in app/extractors/ocr.py degrades gracefully when easyocr
+# is absent (ocr_status="skipped"); install this only where OCR is wanted.
+# Heavy: pulls in torch (~2 GB) and downloads model weights to ~/.EasyOCR.
+easyocr==1.7.2

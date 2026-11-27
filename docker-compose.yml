@@ -1,0 +1,48 @@
+services:
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./backend:/app
+      - ./data:/data
+      - telemonitor_db:/var/lib/telemonitor
+    environment:
+      - DATABASE_URL=sqlite+aiosqlite:////var/lib/telemonitor/tele_monitor.db
+      - TELEGRAM_SESSION_FILE=/var/lib/telemonitor/monitor_session
+      - DRUG_LEXICON_PATH=/data/lexicons/drug_slang.json
+      - FINANCIAL_LEXICON_PATH=/data/lexicons/financial_crime_slang.json
+      - ARMS_LEXICON_PATH=/data/lexicons/arms_slang.json
+      - MODEL_PATH=/data/models/classifier.joblib
+    env_file:
+      - ./backend/.env
+    restart: unless-stopped
+
+  db_seed:
+    image: alpine:3.20
+    profiles: ["maintenance"]
+    volumes:
+      - ./backend:/source:ro
+      - telemonitor_db:/var/lib/telemonitor
+    command: >-
+      sh -c "if [ ! -f /var/lib/telemonitor/tele_monitor.db ]; then
+      cp /source/tele_monitor.db /var/lib/telemonitor/tele_monitor.db;
+      fi;
+      if [ ! -f /var/lib/telemonitor/monitor_session.session ]; then
+      cp /source/monitor_session.session /var/lib/telemonitor/monitor_session.session;
+      fi"
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    ports:
+      - "5173:80"
+    depends_on:
+      - backend
+    restart: unless-stopped
+
+volumes:
+  telemonitor_db:

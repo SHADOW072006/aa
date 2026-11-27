@@ -1,0 +1,6 @@
+# Pinned test runner dependencies (Python 3.12)
+pytest==9.2.0
+pytest-asyncio==1.5.0
+httpx>=0.27.0
+hypothesis>=6.100.0
+

@@ -1,0 +1,162 @@
+{
+  "note": "Fully synthetic demo labels. All identifiers are fictional.",
+  "rows": [
+    {
+      "message_id": 1,
+      "expect": "flag",
+      "categories_any": [
+        "account_sale",
+        "account_rent",
+        "netbanking_sale"
+      ]
+    },
+    {
+      "message_id": 2,
+      "expect": "flag",
+      "categories_any": [
+        "account_sale",
+        "card_sale"
+      ]
+    },
+    {
+      "message_id": 3,
+      "expect": "flag",
+      "categories_any": [
+        "account_sale",
+        "netbanking_sale",
+        "sim_sale"
+      ]
+    },
+    {
+      "message_id": 4,
+      "expect": "flag",
+      "categories_any": [
+        "account_sale",
+        "card_sale"
+      ]
+    },
+    {
+      "message_id": 5,
+      "expect": "flag",
+      "categories_any": [
+        "account_sale",
+        "corporate_mule"
+      ]
+    },
+    {
+      "message_id": 6,
+      "expect": "flag",
+      "categories_any": [
+        "account_sale",
+        "card_sale",
+        "netbanking_sale",
+        "sim_sale"
+      ]
+    },
+    {
+      "message_id": 7,
+      "expect": "flag",
+      "categories_any": [
+        "account_sale",
+        "card_sale",
+        "netbanking_sale",
+        "sim_sale"
+      ]
+    },
+    {
+      "message_id": 8,
+      "expect": "flag",
+      "categories_any": [
+        "cocaine",
+        "drug_sale"
+      ]
+    },
+    {
+      "message_id": 9,
+      "expect": "flag",
+      "categories_any": [
+        "cannabis"
+      ]
+    },
+    {
+      "message_id": 10,
+      "expect": "flag",
+      "categories_any": [
+        "psilocybin",
+        "mdma"
+      ]
+    },
+    {
+      "message_id": 11,
+      "expect": "flag",
+      "categories_any": [
+        "arms_sale"
+      ]
+    },
+    {
+      "message_id": 12,
+      "expect": "flag",
+      "categories_any": [
+        "arms_sale"
+      ]
+    },
+    {
+      "message_id": 13,
+      "expect": "flag",
+      "categories_any": [
+        "fake_docs"
+      ]
+    },
+    {
+      "message_id": 14,
+      "expect": "flag",
+      "categories_any": [
+        "fake_docs"
+      ]
+    },
+    {
+      "message_id": 15,
+      "expect": "flag",
+      "categories_any": [
+        "card_sale"
+      ]
+    },
+    {
+      "message_id": 16,
+      "expect": "flag",
+      "categories_any": [
+        "sim_sale"
+      ]
+    },
+    {
+      "message_id": 17,
+      "expect": "clear",
+      "categories_any": []
+    },
+    {
+      "message_id": 18,
+      "expect": "clear",
+      "categories_any": []
+    },
+    {
+      "message_id": 19,
+      "expect": "clear",
+      "categories_any": []
+    },
+    {
+      "message_id": 20,
+      "expect": "clear",
+      "categories_any": []
+    },
+    {
+      "message_id": 21,
+      "expect": "clear",
+      "categories_any": []
+    },
+    {
+      "message_id": 22,
+      "expect": "clear",
+      "categories_any": []
+    }
+  ]
+}

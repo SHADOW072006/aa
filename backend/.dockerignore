@@ -1,0 +1,17 @@
+.env
+*.db
+*.db-*
+*.sqlite
+*.sqlite3
+*.session
+*.session-journal
+media/
+backups/
+deliverables/
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.hypothesis/
+.venv/
+tests/
+import_media/
