@@ -24,7 +24,7 @@ from app.db.crud import (
     mark_alert_reviewed,
 )
 from app.db.database import get_db
-from app.db.models import Channel, EvidenceMessage, EvidenceObservation, Identifier, Message
+from app.db.models import Alert, Channel, EvidenceMessage, EvidenceObservation, Identifier, Message
 from app.extractors.identifier_extractor import CONTACT_TYPES, mask_identifier
 from app.services.evidence_hashing import provenance_note_for_status
 from app.services.minhash_service import get_minhash_index
@@ -160,6 +160,36 @@ async def alert_stats(
     if include_historical:
         out["LOW"] = counts.get("LOW", 0)
         out["total"] = sum(counts.values())
+    # Dashboard extras: global unreviewed count + active-alert category histogram
+    unrev = (
+        await db.execute(
+            select(func.count(Alert.id)).where(
+                Alert.lifecycle_state == "active", Alert.is_reviewed == False  # noqa: E712
+            )
+        )
+    ).scalar_one()
+    out["unreviewed"] = int(unrev)
+    cat_rows = (
+        await db.execute(
+            select(Alert.categories, func.count(Alert.id))
+            .where(
+                Alert.lifecycle_state == "active",
+                Alert.risk_level.in_(("HIGH", "MEDIUM")),
+            )
+            .group_by(Alert.categories)
+            .limit(500)
+        )
+    ).all()
+    hist: Dict[str, int] = {}
+    for cats_s, n in cat_rows:
+        for c in (cats_s or "").split(","):
+            c = c.strip()
+            if c:
+                hist[c] = hist.get(c, 0) + int(n)
+    out["top_categories"] = [
+        {"category": k, "count": v}
+        for k, v in sorted(hist.items(), key=lambda kv: -kv[1])[:8]
+    ]
     return out
 
 

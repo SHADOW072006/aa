@@ -223,7 +223,7 @@ async def get_channel_details(
                 top_categories = [c for c, _ in cat_counts.most_common(6)]
 
             if not sample_messages:
-                for a in live_alerts[:20]:
+                for a in live_alerts[:40]:
                     m = a.message
                     if not m:
                         continue
@@ -244,6 +244,14 @@ async def get_channel_details(
                         "provenance_status": m.provenance_status,
                         "evidence_hash": m.evidence_hash,
                         "provenance_note": provenance_note_for_status(m.provenance_status),
+                        # police-dossier enrichment
+                        "ocr_text": m.ocr_text,
+                        "media_hash": m.media_hash,
+                        "phash": getattr(m, "image_phash", None),
+                        "identifiers": [
+                            {"type": it.type, "value": it.value}
+                            for it in (m.identifiers or [])
+                        ],
                     })
 
         # Populate identifiers and connected nodes from Identifier table when missing
@@ -318,6 +326,81 @@ async def get_channel_details(
                     m["evidence_hash"] = e_hash
                     m["provenance_note"] = provenance_note_for_status(p_stat)
 
+    # Cross-channel correlation: identifiers ALSO used by other monitored
+    # channels, and identical posts reproduced elsewhere (coordinated posting).
+    identifier_correlations: List[Dict[str, Any]] = []
+    cross_channel_campaigns: List[Dict[str, Any]] = []
+    if ch:
+        from app.extractors.identifier_extractor import CONTACT_TYPES as _CT
+        own_idents = (
+            await db.execute(
+                select(Identifier.normalised, Identifier.type)
+                .join(Message, Message.id == Identifier.message_id)
+                .where(Message.channel_id == ch.id)
+                .distinct()
+            )
+        ).all()
+        own_list = [(n, t) for n, t in own_idents if t in _CT and n]
+        if own_list:
+            norms = [n for n, _t in own_list]
+            corr_rows = (
+                await db.execute(
+                    select(Identifier.normalised, Channel.username)
+                    .join(Message, Message.id == Identifier.message_id)
+                    .join(Channel, Channel.id == Message.channel_id)
+                    .where(Identifier.normalised.in_(norms), Message.channel_id != ch.id)
+                    .distinct()
+                )
+            ).all()
+            corr_map: Dict[str, set] = {}
+            for norm, other_uname in corr_rows:
+                corr_map.setdefault(norm, set()).add(other_uname)
+            type_map = {n: t for n, t in own_list}
+            identifier_correlations = [
+                {"identifier": n, "type": type_map.get(n, ""), "other_channels": sorted(chs)}
+                for n, chs in corr_map.items()
+            ]
+            identifier_correlations.sort(key=lambda c: -len(c["other_channels"]))
+            identifier_correlations = identifier_correlations[:15]
+
+        own_hashes = (
+            await db.execute(
+                select(Message.original_text_hash)
+                .join(Alert, Alert.message_id == Message.id)
+                .where(Message.channel_id == ch.id, Message.original_text_hash.is_not(None))
+            )
+        ).all()
+        hash_list = [h for (h,) in own_hashes]
+        if hash_list:
+            camp_rows = (
+                await db.execute(
+                    select(Message.original_text_hash, Channel.username, Message.created_at)
+                    .join(Message, Message.channel_id == Channel.id)
+                    .where(Message.original_text_hash.in_(hash_list), Message.channel_id != ch.id)
+                    .order_by(Message.created_at)
+                )
+            ).all()
+            camp_map: Dict[str, List[Dict[str, Any]]] = {}
+            for h, uname, cdt in camp_rows:
+                camp_map.setdefault(h, []).append(
+                    {"channel": uname, "date": cdt.isoformat() if cdt else None}
+                )
+            if camp_map:
+                excerpt_rows = (
+                    await db.execute(
+                        select(Message.original_text_hash, Message.text)
+                        .where(Message.channel_id == ch.id, Message.original_text_hash.in_(list(camp_map)))
+                    )
+                ).all()
+                excerpts = {h: (t or "") for h, t in excerpt_rows}
+                cross_channel_campaigns = [
+                    {
+                        "excerpt": excerpts.get(h, "")[:160],
+                        "other_postings": camp_map[h][:12],
+                    }
+                    for h in camp_map
+                ][:10]
+
     return {
         "channel_id": ch.id if ch else None,
         "scan_result_id": scan_res.id if scan_res else None,
@@ -341,6 +424,8 @@ async def get_channel_details(
         "top_identifiers": top_identifiers,
         "sample_messages": sample_messages,
         "connected_nodes": connected_nodes,
+        "identifier_correlations": identifier_correlations,
+        "cross_channel_campaigns": cross_channel_campaigns,
     }
 
 
@@ -567,7 +652,7 @@ async def export_channel_pdf(
     await write_audit_log(db, actor=actor, action="pdf_export", target_type="channel", details={"channel": username})
     await db.commit()
 
-    filename = f"telemonitor_{username}_dossier.pdf"
+    filename = f"telemonitor_{__import__('re').sub(r'[^A-Za-z0-9_-]', '_', username)[:48]}_dossier.pdf"
     return Response(
         content=pdf_bytes,
         media_type="application/pdf",
@@ -624,7 +709,7 @@ async def export_channel_chain_pdf(
     chain = await get_syndicate_chain(db, clean_id)
     pdf_bytes = generate_chain_investigation_pdf(chain)
 
-    filename = f"telemonitor_{clean_id}_syndicate_chain.pdf"
+    filename = f"telemonitor_{__import__('re').sub(r'[^A-Za-z0-9_-]', '_', clean_id)[:48]}_syndicate_chain.pdf"
     return Response(
         content=pdf_bytes,
         media_type="application/pdf",
@@ -714,3 +799,73 @@ async def export_channel_chain_json(
             "Access-Control-Expose-Headers": "Content-Disposition",
         },
     )
+
+
+class ExpandRequest(BaseModel):
+    max_hops: int = 2
+    limit: int = 25
+    persist: bool = False
+    verify: bool = False
+
+
+@router.get("/{identifier}/expand")
+async def preview_channel_expansion(
+    identifier: str,
+    max_hops: int = Query(2, ge=1, le=3),
+    limit: int = Query(25, ge=1, le=100),
+    verify: bool = Query(False),
+    _actor: str = Depends(require_api_token),
+    db: AsyncSession = Depends(get_db),
+):
+    """Dry-run BFS network expansion from stored channel intelligence."""
+    from app.services.network_expansion import expand_channel_network
+
+    try:
+        return await expand_channel_network(
+            db, identifier, max_hops=max_hops, limit=limit, persist=False, verify=verify
+        )
+    except ValueError as exc:
+        raise HTTPException(status_code=404, detail=str(exc))
+
+
+@router.post("/{identifier}/expand")
+async def expand_channel(
+    identifier: str,
+    payload: Optional[ExpandRequest] = None,
+    max_hops: Optional[int] = Query(None, ge=1, le=3),
+    limit: Optional[int] = Query(None, ge=1, le=100),
+    persist: Optional[bool] = Query(None),
+    verify: Optional[bool] = Query(None),
+    actor: str = Depends(require_api_token),
+    db: AsyncSession = Depends(get_db),
+):
+    """BFS network expansion from stored data, with optional persist and Telegram verification."""
+    from app.services.network_expansion import expand_channel_network
+
+    eff_hops = max_hops if max_hops is not None else (payload.max_hops if payload else 2)
+    eff_limit = limit if limit is not None else (payload.limit if payload else 25)
+    eff_persist = persist if persist is not None else (payload.persist if payload else False)
+    eff_verify = verify if verify is not None else (payload.verify if payload else False)
+
+    try:
+        res = await expand_channel_network(
+            db,
+            identifier,
+            max_hops=eff_hops,
+            limit=eff_limit,
+            persist=eff_persist,
+            verify=eff_verify,
+        )
+    except ValueError as exc:
+        raise HTTPException(status_code=404, detail=str(exc))
+
+    if eff_persist:
+        await write_audit_log(
+            db,
+            actor=actor,
+            action="network_expand",
+            target_type="channel",
+            details={"channel": res["root_username"], "persisted": res["persisted_count"]},
+        )
+        await db.commit()
+    return res

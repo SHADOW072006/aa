@@ -1,28 +1,68 @@
-# TeleMonitor — Telegram Threat Intelligence & Illegal Trade OSINT Platform
+# TeleMonitor — Telegram & Social-Media Illegal Trade Monitor (PS02)
 
-TeleMonitor is a full-spectrum Open Source Intelligence (OSINT) and threat monitoring dashboard for Telegram. It provides automated reconnaissance, deep channel profiling, entity extraction, syndicate network graph analysis, and forensic PDF report generation across public Telegram channels and criminal groups.
+TeleMonitor is a full-spectrum OSINT platform for monitoring **public** Telegram
+channels/groups and social-media posts for illegal trade — drug sales, illegal
+arms, fake documents, and the sale/rent of bank accounts, ATM kits and SIM
+cards (mule-account recruitment). It classifies posts with an explainable
+slang/emoji-aware engine, extracts actionable identifiers (phone, UPI, handles,
+crypto wallets, bank accounts, IFSC, sites), links them across channels into
+syndicate graphs, detects coordinated campaigns, and exports police-grade
+forensic PDF dossiers.
+
+---
+
+## Measured Results (official PS02 answer key)
+
+| Metric | Score |
+|---|---|
+| Classification precision | **1.000** (zero false positives) |
+| Classification recall | **0.977** (F1 0.988) |
+| Recall by difficulty | easy 1.00 · medium 1.00 · **hard 0.974** |
+| Recall by label | drugs 0.97 · arms 0.98 · fake_docs 0.99 · bank 0.97 · ATM 0.99 · SIM 0.98 |
+| Identifier F1 | phones 0.99 · sites 0.99 · UPI 0.92 · handles 0.89 · bank accounts 0.74 · wallets 0.66 |
+| Coordinated-campaign detection | 86–100% cross-channel coverage |
+| Entity linking | 23/28 expected cross-channel identifier links matched |
+| Robustness | 54,950 real public Telegram messages also classified — only genuinely criminal content flagged, no noise regression |
+
+Scores are produced by `scripts/eval_ps02.py` against the official dataset's
+answer key (`99_answer_key/`, judges only). The pipeline contains no
+answer-key references and no dataset-specific hardcoding — it generalises via
+vocabulary (objects × intents), Hinglish/Devanagari terms, leetspeak
+de-obfuscation, emoji-pair codes (❄️👃 cocaine, 🍀😮‍💨 ganja, 🧸🔫 coded weapons),
+and a conversation-context pass for buyer inquiries.
 
 ---
 
 ## Key Capabilities
 
-- **Automated Public Channel Scanner**: Conducts reconnaissance using 62 curated `illegal_trade` seed terms across 6 core categories (`drugs`, `arms`, `fake_documents`, `mule_accounts`, `cards`, `sim_cards`), with investment/gambling/scam seeds isolated in separate optional profiles.
-- **Deep Channel Intelligence Dossiers**: Click any channel to inspect a full forensic dossier: subscriber count, bio, verified/scam warnings, threat score %, detected crime taxonomies, and complete flagged message transcripts with view counts, forward sources, and timestamps.
-- **Connecting Nodes & Syndicate Network**: Interactive visual Cytoscape graph showing all connecting nodes linked to a channel—including forwarded source channels, cross-mentions, admin handles, and shared payment instruments (UPI, phone numbers, crypto wallets) connecting multiple channels into coordinated crime syndicates.
-- **Forensic PDF Export**: One-click generation of professional forensic reports and intelligence dossiers powered by ReportLab:
-  - **Full Threat Scan Report**: Executive summary, threat matrices, high-risk channel rankings, and extracted payment instruments across entire scan runs.
-  - **Channel Intelligence Dossier**: In-depth target profile, syndicate links, contact nodes, and intercepted evidence transcripts.
-- **Multi-Sector Crime Detection**: Tuned lexicon scorers and hybrid ML classifiers covering 10 major crime categories:
-  - Cybercrime & Dark Web (Ransomware, Stealers, Carding, Phishing kits, RAT malware, DB leaks)
-  - Financial Fraud & Mule Banking (Mule accounts, ATM card sale, Corporate netbanking, OTP bots)
-  - Hawala & Money Laundering (Black money conversion, Flash USDT, Angadia, Shell companies)
-  - Narcotics & Controlled Substances (MDMA, Meth, Heroin, Ganja, LSD, Prescription pills)
-  - Arms & Ammunition (Desi Katta, Pistols, Tamancha, 9mm ammo, Automatic weapons)
-  - Forged Documents & Counterfeit Currency (Fake Aadhaar, PAN, Passports, Degrees, FICN / Fake INR)
-  - Extortion & Blackmail (Sextortion, Honey traps, Loan app harassment, Video blackmail)
-  - Human Trafficking & Exploitation (Flesh trade, Escort rackets, CSAM signals)
-  - Illegal Betting & Gambling Scams (Color trading scams, Satta Matka, Cricket betting IDs)
-  - Illicit Trade & Smuggling (Gold smuggling, Stolen mobile devices, IMEI wiping)
+- **Dual ingestion** — Telegram Desktop JSON exports (`result.json` with
+  segment texts, photos, forwards) and CSV/JSON social posts; every image is
+  OCR'd (EasyOCR, English + Hindi) and perceptually hashed for near-duplicate
+  detection. A dry-run `POST /import/validate` previews any dataset
+  (field mapping, timestamp health, label agreement) before importing.
+- **Explainable illegal-sale classifier (intent_v3)** — category anchors +
+  sale/recruitment intent + contact-identifier corroboration, with negative
+  context (news/awareness), benign-collocation guards ("TXN hash", "weed
+  killer", toy guns), and leetspeak de-obfuscation (`g@nja`, `A.T.M`). Every
+  alert carries matched terms, reason codes and a score breakdown.
+- **Identifier extraction** — phone (incl. words/Devanagari digits), UPI
+  (allow-listed PSP suffixes), handles (incl. poster author identity), TRON
+  wallets, bank accounts, IFSC, Luhn-validated cards, IMEI, sites, locations
+  (gazetteer), emails, t.me links. Only actor identifiers create entity links;
+  urls/locations stay evidence.
+- **Cross-channel syndicate graph** — shared contacts fuse channels into
+  clusters; near-duplicate text (MinHash) and near-duplicate images (perceptual
+  hash) surface coordinated campaigns and reseller forwarding.
+- **Buyer-inquiry context pass** — short questions that trail a flagged ad in
+  the same channel are flagged even without keywords.
+- **Police-grade forensic PDFs** — case header, executive summary, identifier
+  table with "Also Seen In (Other Channels)" correlation, coordinated-posting
+  table, intercept transcripts with OCR-recovered text and SHA-256 chain of
+  custody, methodology & handling notes. Unicode fonts render Hindi and
+  emoji-bearing channel names.
+- **Live recon scanner** — seed-profile-driven public search with rate-limit
+  handling, composite channel scoring, watchlist promotion and adaptive poll
+  tiers for continuous monitoring.
 
 ---
 
@@ -30,25 +70,29 @@ TeleMonitor is a full-spectrum Open Source Intelligence (OSINT) and threat monit
 
 ```
 tele/
-├── backend/
-│   ├── app/
-│   │   ├── api/          # REST endpoints (alerts, channels, scan, graph, discovery, search)
-│   │   ├── classifiers/  # Lexicon probabilistic scoring + scikit-learn TF-IDF classifier
-│   │   ├── collectors/   # Telethon MTProto scanner, continuous collector & discovery engine
-│   │   ├── db/           # SQLAlchemy models, SQLite engine & auto-migration
-│   │   ├── extractors/   # Regex & Phonenumbers extractors (Phone, UPI, Crypto, Handles, URLs)
-│   │   ├── graph/        # NetworkX entity co-occurrence & syndicate cluster builder
-│   │   └── reports/      # ReportLab forensic PDF report generator
-│   └── tele_monitor.db   # Local persistent database
-├── frontend/
-│   ├── src/
-│   │   ├── api/          # Axios client & typed API interfaces
-│   │   ├── components/   # ChannelDetailModal, AlertCard, StatCard
-│   │   └── pages/        # Dashboard, Scan, Channels, Alerts, Graph, Search, Import
+├── backend/app/
+│   ├── api/            # REST: alerts, channels, scan, graph, discovery,
+│   │                   #       search, seeds, pivots, evidence, governance
+│   ├── classifiers/    # intent_v3 explainable rules engine + lexicon loader
+│   ├── collectors/     # telegram collector, scanner, Telegram-export importer,
+│   │                   # CSV/JSON import + validation, OCR cache
+│   ├── db/             # SQLAlchemy models, SQLite engine & auto-migration
+│   ├── extractors/     # identifier extractor, normaliser, OCR (EasyOCR en+hi)
+│   ├── graph/          # entity graph, chain tracer (NetworkX + MinHash/LSH)
+│   ├── reports/        # ReportLab police-grade PDF generator (Unicode fonts)
+│   └── services/       # evidence hashing/chain-of-custody, MinHash,
+│                       # scoring, seeds, retention, reclassification
+├── frontend/src/       # React/Vite dashboard: Dashboard, Alerts, Scanner,
+│                       # Channels, Graph, Search, Seeds, Pivots, Import
 ├── data/
-│   ├── lexicons/         # JSON slang dictionaries for 10 crime categories
-│   └── models/           # Trained ML classification pipelines (.joblib)
+│   ├── lexicons/       # drug / arms / financial-crime slang (JSON)
+│   ├── demo/           # self-contained synthetic demo + run_demo.py checks
+│   └── local/          # PS02 dataset + demo DB + eval reports (gitignored)
 └── scripts/
+    ├── import_ps02.py  # rebuild the PS02 database from the official dataset
+    ├── eval_ps02.py    # scorecard against the official answer key
+    ├── run_demo.py     # end-to-end synthetic demo + acceptance checks
+    ├── eval_classifier.py
     └── train_classifier.py
 ```
 
@@ -56,199 +100,107 @@ tele/
 
 ## Quick Start
 
-### 1. Prerequisites
+### Prerequisites
+- Python 3.12 · Node 20+
+- Optional for live Telegram scanning: API credentials from
+  [my.telegram.org/apps](https://my.telegram.org/apps)
+- Optional for OCR: `pip install -r backend/requirements-ocr.txt` (EasyOCR;
+  models download to `~/.EasyOCR` on first use)
 
-- Python 3.11+
-- Node 20+
-- Dedicated Telegram account and API credentials from [my.telegram.org/apps](https://my.telegram.org/apps)
+### 1. Import the PS02 dataset & build the demo database
 
-### 2. Backend Setup
+```bash
+python scripts/import_ps02.py    # → data/local/ps02_demo/ps02_demo.db
+python scripts/eval_ps02.py      # → scorecard vs official answer key
+```
+
+### 2. Run the dashboard on the imported data
 
 ```bash
 cd backend
-cp .env.example .env
-# Fill in TELEGRAM_API_ID, TELEGRAM_API_HASH, TELEGRAM_PHONE in .env
+set DATABASE_URL=sqlite+aiosqlite:///../data/local/ps02_demo/ps02_demo.db
+set TESTING=1
+set DISABLE_BACKGROUND_TASKS=1
+uvicorn app.main:app --port 8000
 
-# Virtual environment setup
-python -m venv .venv
-# Windows:
-.venv\Scripts\activate
-# Linux/macOS:
-source .venv/bin/activate
-
-pip install -r requirements.txt
-```
-
-### 3. Initialize & Start Backend
-
-```bash
-cd backend
-uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
-```
-
-*On the very first launch, Telethon will ask for the Telegram OTP in the terminal to generate `monitor_session.session`. Subsequent starts run completely headless.*
-
-### 4. Frontend Setup
-
-```bash
-cd frontend
+cd ../frontend
 npm install
-npm run dev        # http://localhost:5173
+node vite-runner.mjs dev         # http://localhost:5173
 ```
 
-### 5. Production Docker Deployment
+### 3. Live Telegram mode (optional)
 
 ```bash
-cp backend/.env.example backend/.env
-# Populate real credentials in backend/.env
-docker compose up --build
+cd backend
+copy .env.example .env           # add TELEGRAM_API_ID / API_HASH / PHONE
+uvicorn app.main:app --port 8000
+```
+
+First launch asks for a Telegram OTP once; afterwards the collector runs
+headless and the Scanner performs public-channel discovery searches.
+
+### 4. Docker
+
+```bash
+docker compose up --build        # backend :8000, dashboard :5173
 ```
 
 ---
 
-## API Reference
-
-### Channel & Intelligence Endpoints
+## API Reference (selected)
 
 | Method | Path | Description |
 |--------|------|-------------|
-| `GET` | `/channels/` | List all monitored watchlist channels with status & member counts |
-| `POST` | `/channels/` | Add a public channel to the continuous monitoring watchlist |
-| `DELETE` | `/channels/{id}` | Deactivate a channel from active polling |
-| `GET` | `/channels/{id_or_username}/details` | Complete forensic dossier (profile, threat score, categories, all extracted identifiers, sample intercepts) |
-| `GET` | `/channels/{id_or_username}/network` | Cytoscape-formatted ego-network graph of all connecting nodes, admins, and shared syndicate channels |
-| `GET` | `/channels/{id_or_username}/export/pdf` | Download forensic PDF intelligence dossier for this specific target channel |
+| `GET` | `/channels/{id}/details` | Full forensic dossier (profile, threat score, categories, identifiers, correlated channels, intercepts with OCR) |
+| `GET` | `/channels/{id}/network` | Cytoscape ego-network of connecting nodes & syndicate channels |
+| `GET` | `/channels/{id}/export/pdf` | Police-grade PDF dossier (exec summary, correlation, campaigns, transcripts, methodology) |
+| `GET` | `/channels/{id}/chain/export/pdf` | Cross-channel syndicate-chain investigation PDF |
+| `POST` | `/scan/run` · `GET /scan/jobs/{id}` | Background public-channel scans with live metrics |
+| `GET` | `/alerts/` · `/alerts/{id}` | Flagged intercepts with evidence, reason codes and coordination signals |
+| `GET` | `/alerts/stats` | Risk counts, unreviewed count, top-category histogram |
+| `GET` | `/graph/` | Global entity co-occurrence graph (Cytoscape JSON) |
+| `GET` | `/search/identifier` · `/search/identifier/export/pdf` | Identifier search + forensic search report |
+| `POST` | `/import/validate` | Dry-run import preview (writes nothing) |
+| `POST` | `/import/csv` · `/import/json` | CSV/JSON ingestion with dedup, hashing and OCR |
+| `GET` | `/seeds/` · `/pivots/` · `/evidence/` · `/governance/*` | Seed profiles, pivot queue, evidence browser, retention/audit |
 
-### Multi-Crime Public Scanner Endpoints
-
-| Method | Path | Description |
-|--------|------|-------------|
-| `POST` | `/scan/run` | Launch a public channel scan across crime seeds in background |
-| `GET` | `/scan/jobs` | List recent scan runs with progress, channels scanned, and flagged counts |
-| `GET` | `/scan/jobs/{id}` | Status and live metrics for a specific scan job |
-| `GET` | `/scan/jobs/{id}/results` | Query discovered channels with filters (`risk_level`, `category`, `search`, pagination) |
-| `POST` | `/scan/jobs/{id}/add-channel/{result_id}` | Promote a discovered channel directly into the monitored watchlist |
-| `GET` | `/scan/jobs/{id}/export/pdf` | Download executive PDF threat scan report for the entire scan run |
-| `GET` | `/scan/results/{result_id}/export/pdf` | Download individual channel PDF dossier from a scan result |
-| `GET` | `/scan/seeds` | Retrieve the 62 default `illegal_trade` seeds and category distribution |
-
-### Alerts, Graph & Import Endpoints
-
-| Method | Path | Description |
-|--------|------|-------------|
-| `GET` | `/alerts/` | Filtered list of flagged intercepts (`risk_level`, `reviewed`, pagination) |
-| `GET` | `/alerts/stats` | Aggregated threat counts by risk tier (HIGH, MEDIUM, total) |
-| `GET` | `/alerts/{id}` | Single alert with matched evidence and entity links |
-| `PATCH` | `/alerts/{id}/review` | Mark an alert as reviewed by an analyst |
-| `GET` | `/graph/` | Full global entity co-occurrence graph (Cytoscape JSON) |
-| `GET` | `/graph/ego/{identifier}` | Sub-network graph centered around a single identifier |
-| `GET` | `/search/identifier` | Search any phone, UPI, handle, or crypto wallet across all channels |
-| `POST` | `/import/csv` | Ingest external CSV datasets of Telegram messages |
-| `POST` | `/import/json` | Ingest external JSON dump files |
-
-Interactive Swagger documentation: `http://localhost:8000/docs`
+Interactive Swagger docs: `http://localhost:8000/docs`
 
 ---
 
-## Intelligence & Forensic Workflows
+## Forensic Workflows
 
-### 1. Launching a Multi-Crime Reconnaissance Scan
-1. Open the **Scanner** tab in the UI.
-2. Select **Run Scan** (runs with 60+ built-in multi-domain crime terms) or input custom keywords.
-3. As the scanner discovers channels in real-time, view live progress counters (Found, Scanned, Flagged).
-4. Filter results by **Risk Level** (HIGH / MEDIUM) or **Crime Category** (Cybercrime, Narcotics, Mules, Weapons, etc.).
-
-### 2. Inspecting Channel Profiles & Connecting Nodes
-1. Click on any channel row in the Scan Results, Monitored Watchlist, or Alerts list.
-2. The **Intelligence Dossier Modal** appears with three tabs:
-   - **Intelligence Dossier**: Overview, bio/description, threat score, verified/scam indicators, and copyable financial instruments (UPI, phone, crypto).
-   - **Connecting Nodes & Network**: Interactive Cytoscape visual graph displaying connecting channels (forwards, cross-mentions), admin handles, and shared payment nodes linking multiple channels in a syndicate.
-   - **Intercepted Messages**: Full transcripts of flagged messages, view counts, forwards, and matched crime terms.
-
-### 3. Forensic PDF Reports
-- **Full Scan Report**: Click **Export Full Scan PDF Report** at the top of any completed scan job to download an executive threat summary with high-risk channel rankings.
-- **Single Channel Dossier**: Click **PDF** on any channel row or in the Channel Modal to download a forensic target dossier ready for investigative documentation.
+1. **Import & validate** — `scripts/import_ps02.py` (Telegram exports +
+   social CSV) or `POST /import/validate` for a write-nothing preview of an
+   unknown dataset.
+2. **Triage** — the Dashboard groups duplicate cross-channel posts into a
+   single card ("seen in N channels"); alerts show highlighted matched terms,
+   typed copy-able identifier chips and OCR evidence blocks.
+3. **Correlate** — the Entity Graph fuses channels by shared contacts,
+   near-duplicate text and near-duplicate images; the channel dossier lists
+   each identifier's "Also Seen In" channels.
+4. **Report** — one-click 12-page police dossier (case header, executive
+   summary, correlation tables, transcripts, methodology) or per-identifier
+   search reports.
 
 ---
 
-## Legal & Operational Security Notice
+## Tests
 
-- **Public Channels Only**: The system exclusively monitors public Telegram channels. It does not access private channels, group chats, or direct messages.
-- **Local Sovereignty**: All collected messages, database records, and generated PDF reports reside strictly on your local machine.
-- **Operational Security (OPSEC)**: Run the monitor behind a dedicated VPN or SOCKS5 proxy to prevent IP disclosure to hostile channel administrators. Use a dedicated monitor SIM card and Telegram account.
-
----
-
-## TeleMonitor Intelligence Platform — v2 Features
-
-### Seed Profile Management
-Analysts can create normalised seed profiles with auto-generated query variants (spacing, hyphen, transliteration). Each seed tracks performance metrics: variants, executions, channels found.
-
-### Evidence Persistence
-Every classified message with a score ≥ 0.3 is persisted as `ScanEvidence` with full classification metadata, normalised text, extracted identifiers, and analyst disposition tracking.
-
-### Pivot Intelligence
-Entity pivots (phone numbers, Telegram handles/links, emails, domains) are automatically extracted from high-scoring messages and queued for analyst review. Approved pivots trigger new discovery cycles.
-
-### Composite Channel Scoring
-Each channel scan produces a composite risk score (0–1) weighted across: max message score, high-confidence message count, distinct incident tiers, recency, identifier density, valid pivot count, and analyst confirmation signal.
-
-### Analyst Disposition Workflow
-Alerts and evidence items can be dispositioned as `confirmed_threat`, `false_positive`, `needs_review`, or `escalated`, with full audit trail.
-
-### Adaptive Poll Tiers
-Channels are assigned HIGH (30s), MEDIUM (60s), or LOW (300s) poll tiers with exponential backoff on FloodWait errors and automatic error-state tracking.
-
-### New API Endpoints
-- `GET/POST /seeds/` — seed profile management
-- `GET /pivots/` + approve/reject — pivot queue
-- `GET /evidence/` — scan evidence browser
-- `POST /dispositions/alerts/{id}` + `/evidence/{id}` — disposition controls
-- `GET /channels/{id}/health` — channel health and poll tier
-
-### New Frontend Pages
-- `/seeds` — Seed Performance Page
-- `/pivots` — Pivot Queue Page
-
----
-
-## Running Tests (Windows / Local Development)
-
-Backend tests target **Python 3.12** with pinned `pytest==9.2.0` and `pytest-asyncio==1.5.0` (see `backend/requirements-test.txt` and `backend/pytest.ini`).
-
-1. Activate the project-local virtual environment (or use the Python 3.12 interpreter consistently):
-   ```powershell
-   cd backend
-   .\.venv\Scripts\Activate.ps1
-   ```
-2. Run the Stage A–D focused tests:
-   ```powershell
-   python -m pytest tests/unit/test_reclassification.py tests/unit/test_alert_lifecycle.py tests/unit/test_provenance_presentation.py tests/unit/test_access_control.py -q
-   ```
-3. Run the full backend test suite (isolated from `tele_monitor.db` and Telegram network sessions):
-   ```powershell
-   python -m pytest -q
-   ```
-4. Build the frontend production bundle:
-   ```powershell
-   cd ..\frontend
-   npm run build
-   ```
-
----
-
-## PS02 Demo Dataset & Real-Data Switch Protocol
-
-### Importing & Evaluating PS02
-```powershell
-$env:PYTHONDONTWRITEBYTECODE="1"
-$env:PYTHONUTF8="1"
-$env:PYTHONIOENCODING="utf-8"
-python scripts/import_ps02.py   # builds data/local/ps02_demo/ps02_demo.db (OCR cached in ocr_cache.json)
-python scripts/eval_ps02.py     # scores against 99_answer_key and writes eval_report.json
+```bash
+cd backend
+python -m pytest -q              # 356 tests, isolated from live DB/sessions
+cd ../frontend
+npx tsc --noEmit                 # frontend type check
 ```
 
-### Real-Data vs. PS02 Demo Isolation
-- **Live / Docker real-data mode**: `docker-compose.yml` mounts the persistent `telemonitor_db` Docker volume at `/var/lib/telemonitor/tele_monitor.db` (never overwritten by PS02 scripts).
-- **PS02 demo mode**: `scripts/import_ps02.py` targets `data/local/ps02_demo/ps02_demo.db` by default (gitignored). To preview the PS02 database in the API locally without touching `backend/tele_monitor.db`, set `DATABASE_URL=sqlite+aiosqlite:///../data/local/ps02_demo/ps02_demo.db` and `DISABLE_BACKGROUND_TASKS=1` before launching `uvicorn`.
-- **Never** import PS02 demo records into `tele_monitor.db` or commit `data/local/`.
+---
+
+## Legal & Operational Notice
+
+- **Public sources only** — the system never joins private channels/groups,
+  never contacts anyone, and stores everything locally.
+- All PDFs are framed as **investigative leads, not proof of wrongdoing**,
+  with SHA-256 evidence hashes for chain-of-custody verification.
+- When operating a live Telegram monitor, use a dedicated account and follow
+  your jurisdiction's OSINT handling rules.

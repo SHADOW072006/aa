@@ -42,7 +42,7 @@ from app.extractors.normaliser import normalise as normalise_seed
 logger = logging.getLogger(__name__)
 
 VALID_SEED_STATUSES = frozenset({"proposed", "active", "paused", "retired"})
-VALID_SEED_PROFILES = frozenset({"illegal_trade", "finance_scam", "gambling_betting", "extended_legacy"})
+VALID_SEED_PROFILES = frozenset({"illegal_trade", "discovery", "finance_scam", "gambling_betting", "extended_legacy"})
 VALID_SEED_ROLES = frozenset({"discovery", "indicator"})
 _ALLOWED_TRANSITIONS = {
     "proposed": {"active", "retired"},
@@ -437,6 +437,7 @@ async def sync_seed_catalogue(db: AsyncSession) -> dict:
     from app.services.seed_defaults import (
         CATALOGUE_VERSION,
         DEFAULT_SEED_CATALOGUE,
+        DISCOVERY_SEED_CATALOGUE,
         FINANCE_SCAM_SEED_CATALOGUE,
         ILLEGAL_TRADE_CATEGORIES,
         load_local_seeds_overlay,
@@ -460,10 +461,11 @@ async def sync_seed_catalogue(db: AsyncSession) -> dict:
 
     await db.flush()
 
-    # 2. Upsert core illegal_trade + overlay + separated finance/gambling catalogues
+    # 2. Upsert core illegal_trade + overlay + discovery + separated finance/gambling catalogues
     all_entries = [
         *DEFAULT_SEED_CATALOGUE,
         *load_local_seeds_overlay(),
+        *DISCOVERY_SEED_CATALOGUE,
         *FINANCE_SCAM_SEED_CATALOGUE,
     ]
     for entry in all_entries:

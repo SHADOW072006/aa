@@ -114,6 +114,47 @@ FINANCE_SCAM_SEED_CATALOGUE: List[Dict[str, Any]] = [
     {"seed_text": "ipl satta matka betting", "threat_category": "gambling_scam", "profile": "gambling_betting", "language_region": "hinglish", "intent_type": "rental_or_recruitment", "priority": 4, "seed_role": "discovery", "status": "paused", "rationale": "Separated gambling/betting profile"},
 ]
 
+# Title-style discovery seeds: realistic channel names/bios and gateway funnels
+# across all 6 PS02 categories. Used by profile="discovery" recon scans while
+# DEFAULT_SEED_CATALOGUE ("illegal_trade") remains the classifier vocabulary.
+DISCOVERY_SEED_CATALOGUE: List[Dict[str, Any]] = [
+    # Drugs (title/euphemism style)
+    {"seed_text": "party supplies india", "threat_category": "drugs", "profile": "discovery", "language_region": "en", "intent_type": "sale_or_supply", "priority": 2, "seed_role": "discovery", "status": "active", "rationale": "Euphemistic party/recreational supply channel title"},
+    {"seed_text": "herbal smoke shop", "threat_category": "drugs", "profile": "discovery", "language_region": "en", "intent_type": "sale_or_supply", "priority": 2, "seed_role": "discovery", "status": "active", "rationale": "Storefront-style cannabis/herbal channel title"},
+    {"seed_text": "green vibes club", "threat_category": "drugs", "profile": "discovery", "language_region": "en", "intent_type": "sale_or_supply", "priority": 2, "seed_role": "discovery", "status": "active", "rationale": "Community-branded cannabis channel title"},
+    {"seed_text": "chill zone supplies", "threat_category": "drugs", "profile": "discovery", "language_region": "en", "intent_type": "sale_or_supply", "priority": 3, "seed_role": "discovery", "status": "active", "rationale": "Student/youth-targeted supply group title"},
+    # Arms (title/euphemism style)
+    {"seed_text": "self defense tools", "threat_category": "arms", "profile": "discovery", "language_region": "en", "intent_type": "sale_or_supply", "priority": 2, "seed_role": "discovery", "status": "active", "rationale": "Innocent-sounding weapons storefront title"},
+    {"seed_text": "desi hardware store", "threat_category": "arms", "profile": "discovery", "language_region": "hinglish", "intent_type": "sale_or_supply", "priority": 2, "seed_role": "discovery", "status": "active", "rationale": "Coded hardware/tools channel title"},
+    {"seed_text": "tactical gear india", "threat_category": "arms", "profile": "discovery", "language_region": "en", "intent_type": "sale_or_supply", "priority": 3, "seed_role": "discovery", "status": "active", "rationale": "Tactical/defense equipment channel title"},
+    {"seed_text": "airgun metal store", "threat_category": "arms", "profile": "discovery", "language_region": "en", "intent_type": "sale_or_supply", "priority": 3, "seed_role": "discovery", "status": "active", "rationale": "Replica/metal firearm storefront title"},
+    # Fake documents (service/studio style)
+    {"seed_text": "passport service", "threat_category": "fake_documents", "profile": "discovery", "language_region": "en", "intent_type": "sale_or_supply", "priority": 2, "seed_role": "discovery", "status": "active", "rationale": "Document agency/service channel title"},
+    {"seed_text": "document editing", "threat_category": "fake_documents", "profile": "discovery", "language_region": "en", "intent_type": "sale_or_supply", "priority": 2, "seed_role": "discovery", "status": "active", "rationale": "ID/certificate editing service title"},
+    {"seed_text": "photo studio ad", "threat_category": "fake_documents", "profile": "discovery", "language_region": "en", "intent_type": "sale_or_supply", "priority": 3, "seed_role": "discovery", "status": "active", "rationale": "Print/studio cover for forged IDs"},
+    {"seed_text": "certificate print service", "threat_category": "fake_documents", "profile": "discovery", "language_region": "en", "intent_type": "sale_or_supply", "priority": 2, "seed_role": "discovery", "status": "active", "rationale": "Academic/civil document printing cover"},
+    # Mule accounts (gateway funnels + recruitment titles)
+    {"seed_text": "colour prediction", "threat_category": "mule_accounts", "profile": "discovery", "language_region": "en", "intent_type": "rental_or_recruitment", "priority": 1, "seed_role": "discovery", "status": "active", "rationale": "Gateway funnel to payin/mule bank accounts"},
+    {"seed_text": "satta matka", "threat_category": "mule_accounts", "profile": "discovery", "language_region": "hinglish", "intent_type": "rental_or_recruitment", "priority": 2, "seed_role": "discovery", "status": "active", "rationale": "Betting gateway funnel using rented UPI/bank accounts"},
+    {"seed_text": "daman game", "threat_category": "mule_accounts", "profile": "discovery", "language_region": "en", "intent_type": "rental_or_recruitment", "priority": 2, "seed_role": "discovery", "status": "active", "rationale": "Gaming/prediction gateway to mule recruitment"},
+    {"seed_text": "trading vip", "threat_category": "mule_accounts", "profile": "discovery", "language_region": "en", "intent_type": "rental_or_recruitment", "priority": 2, "seed_role": "discovery", "status": "active", "rationale": "VIP trading group gateway to account rental"},
+    {"seed_text": "stock tips", "threat_category": "mule_accounts", "profile": "discovery", "language_region": "en", "intent_type": "rental_or_recruitment", "priority": 3, "seed_role": "discovery", "status": "active", "rationale": "Advisory channel title adjacent to financial fraud"},
+    {"seed_text": "job alert daily payment", "threat_category": "mule_accounts", "profile": "discovery", "language_region": "en", "intent_type": "rental_or_recruitment", "priority": 1, "seed_role": "discovery", "status": "active", "rationale": "Job-alert cover used for mule account recruitment"},
+    {"seed_text": "part time income", "threat_category": "mule_accounts", "profile": "discovery", "language_region": "en", "intent_type": "rental_or_recruitment", "priority": 1, "seed_role": "discovery", "status": "active", "rationale": "Part-time income funnel for bank/SIM rental"},
+    {"seed_text": "loan approval", "threat_category": "mule_accounts", "profile": "discovery", "language_region": "en", "intent_type": "rental_or_recruitment", "priority": 2, "seed_role": "discovery", "status": "active", "rationale": "Instant loan cover harvesting KYC/bank kits"},
+    # Cards (payment/carding/OTP service titles)
+    {"seed_text": "flash usdt", "threat_category": "cards", "profile": "discovery", "language_region": "en", "intent_type": "sale_or_supply", "priority": 1, "seed_role": "discovery", "status": "active", "rationale": "Crypto/carding laundering service title"},
+    {"seed_text": "cvv dumps", "threat_category": "cards", "profile": "discovery", "language_region": "en", "intent_type": "sale_or_supply", "priority": 1, "seed_role": "discovery", "status": "active", "rationale": "Carding marketplace title"},
+    {"seed_text": "carding", "threat_category": "cards", "profile": "discovery", "language_region": "en", "intent_type": "sale_or_supply", "priority": 1, "seed_role": "discovery", "status": "active", "rationale": "Direct carding community/channel title"},
+    {"seed_text": "otp bot", "threat_category": "cards", "profile": "discovery", "language_region": "en", "intent_type": "sale_or_supply", "priority": 1, "seed_role": "discovery", "status": "active", "rationale": "OTP interception bot/service title"},
+    {"seed_text": "bank transfer service", "threat_category": "cards", "profile": "discovery", "language_region": "en", "intent_type": "sale_or_supply", "priority": 2, "seed_role": "discovery", "status": "active", "rationale": "Cashout and card-to-bank transfer channel title"},
+    # SIM cards (telecom/wholesale titles)
+    {"seed_text": "sim wholesale", "threat_category": "sim_cards", "profile": "discovery", "language_region": "en", "intent_type": "sale_or_supply", "priority": 1, "seed_role": "discovery", "status": "active", "rationale": "Wholesale telecom/SIM dealer channel title"},
+    {"seed_text": "bulk sim", "threat_category": "sim_cards", "profile": "discovery", "language_region": "en", "intent_type": "sale_or_supply", "priority": 1, "seed_role": "discovery", "status": "active", "rationale": "Bulk SIM supply channel title"},
+    {"seed_text": "number sale", "threat_category": "sim_cards", "profile": "discovery", "language_region": "en", "intent_type": "sale_or_supply", "priority": 2, "seed_role": "discovery", "status": "active", "rationale": "Virtual/physical number sale channel title"},
+    {"seed_text": "vip mobile number", "threat_category": "sim_cards", "profile": "discovery", "language_region": "en", "intent_type": "sale_or_supply", "priority": 3, "seed_role": "discovery", "status": "active", "rationale": "Cover storefront for pre-activated SIM sales"},
+]
+
 
 def load_local_seeds_overlay(overlay_path: str = DEFAULT_LOCAL_SEEDS_OVERLAY) -> List[Dict[str, Any]]:
     """Load analyst-observed seeds from local Git-ignored overlay file if present."""

@@ -239,7 +239,7 @@ async def export_result_pdf(
     pdf_bytes = generate_channel_dossier_pdf(res_dict)
     await write_audit_log(db, actor=actor, action="pdf_export", target_type="scan_result", target_id=result_id)
     await db.commit()
-    filename = f"telemonitor_{row.channel_username}_dossier.pdf"
+    filename = f"telemonitor_{__import__('re').sub(r'[^A-Za-z0-9_-]', '_', row.channel_username)[:48]}_dossier.pdf"
     return Response(
         content=pdf_bytes,
         media_type="application/pdf",

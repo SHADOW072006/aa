@@ -42,3 +42,9 @@ node_modules/
 frontend/dist/
 frontend/.temp/
 
+
+# Frontend generated files and runtime logs
+frontend/node_modules/
+frontend/dist/
+frontend/.temp/
+frontend/*.log

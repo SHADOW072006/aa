@@ -1,0 +1,417 @@
+{
+  "pbtResults": {
+    "21.1 Write property test for scheduler query filter correctness (Property 1)": {
+      "status": "passed",
+      "lastRunTimestamp": 1795462352403
+    },
+    "21.2 Write property test for tier priority ordering (Property 2)": {
+      "status": "passed",
+      "lastRunTimestamp": 1795462358342
+    },
+    "21.3 Write property test for FloodWait backoff cap (Property 3)": {
+      "status": "passed",
+      "lastRunTimestamp": 1795462363262
+    },
+    "21.4 Write property test for error counter and error_state threshold (Property 4)": {
+      "status": "passed",
+      "lastRunTimestamp": 1795462368155
+    },
+    "21.5 Write property test for success resetting error state (Property 5)": {
+      "status": "passed",
+      "lastRunTimestamp": 1795462375060
+    },
+    "21.6 Write property test for upsert_evidence_message preserving first_seen_at and disposition (Property 6)": {
+      "status": "passed",
+      "lastRunTimestamp": 1795462380940
+    },
+    "21.7 Write property test for insert_evidence_observation always adds rows (Property 7)": {
+      "status": "passed",
+      "lastRunTimestamp": 1795462387900
+    },
+    "21.8 Write property test for list_evidence_messages filter correctness (Property 8)": {
+      "status": "passed",
+      "lastRunTimestamp": 1795462392938
+    },
+    "21.9 Write property test for observations ordering (Property 9)": {
+      "status": "passed",
+      "lastRunTimestamp": 1795462400117
+    },
+    "21.10 Write property test for migration idempotency (Property 10)": {
+      "status": "passed",
+      "lastRunTimestamp": 1795462405753
+    }
+  },
+  "executionHistory": {
+    "1. Add new settings to `app/core/config.py`": [
+      {
+        "executionId": "a7e9251b-ffb6-4906-a034-c71ab3fe4ecd",
+        "chatSessionId": "sess_90f2443e-a5ed-4529-8618-759fbca65046",
+        "timestamp": 1795458713530
+      },
+      {
+        "executionId": "a7e9251b-ffb6-4906-a034-c71ab3fe4ecd",
+        "chatSessionId": "sess_90f2443e-a5ed-4529-8618-759fbca65046",
+        "timestamp": 1795458725333
+      },
+      {
+        "executionId": "a7e9251b-ffb6-4906-a034-c71ab3fe4ecd",
+        "chatSessionId": "sess_90f2443e-a5ed-4529-8618-759fbca65046",
+        "timestamp": 1795458807291
+      }
+    ],
+    "2. Add `EvidenceMessage` and `EvidenceObservation` ORM models to `app/db/models.py`": [
+      {
+        "executionId": "a7e9251b-ffb6-4906-a034-c71ab3fe4ecd",
+        "chatSessionId": "sess_90f2443e-a5ed-4529-8618-759fbca65046",
+        "timestamp": 1795458713617
+      },
+      {
+        "executionId": "a7e9251b-ffb6-4906-a034-c71ab3fe4ecd",
+        "chatSessionId": "sess_90f2443e-a5ed-4529-8618-759fbca65046",
+        "timestamp": 1795459116124
+      },
+      {
+        "executionId": "a7e9251b-ffb6-4906-a034-c71ab3fe4ecd",
+        "chatSessionId": "sess_90f2443e-a5ed-4529-8618-759fbca65046",
+        "timestamp": 1795459179594
+      }
+    ],
+    "3. Add `next_poll_at` column migration to `app/db/database.py`": [
+      {
+        "executionId": "a7e9251b-ffb6-4906-a034-c71ab3fe4ecd",
+        "chatSessionId": "sess_90f2443e-a5ed-4529-8618-759fbca65046",
+        "timestamp": 1795458713652
+      },
+      {
+        "executionId": "a7e9251b-ffb6-4906-a034-c71ab3fe4ecd",
+        "chatSessionId": "sess_90f2443e-a5ed-4529-8618-759fbca65046",
+        "timestamp": 1795459121443
+      },
+      {
+        "executionId": "a7e9251b-ffb6-4906-a034-c71ab3fe4ecd",
+        "chatSessionId": "sess_90f2443e-a5ed-4529-8618-759fbca65046",
+        "timestamp": 1795459185781
+      }
+    ],
+    "4. Add evidence table migration SQL to `app/db/database.py`": [
+      {
+        "executionId": "a7e9251b-ffb6-4906-a034-c71ab3fe4ecd",
+        "chatSessionId": "sess_90f2443e-a5ed-4529-8618-759fbca65046",
+        "timestamp": 1795458713684
+      },
+      {
+        "executionId": "a7e9251b-ffb6-4906-a034-c71ab3fe4ecd",
+        "chatSessionId": "sess_90f2443e-a5ed-4529-8618-759fbca65046",
+        "timestamp": 1795459192517
+      },
+      {
+        "executionId": "a7e9251b-ffb6-4906-a034-c71ab3fe4ecd",
+        "chatSessionId": "sess_90f2443e-a5ed-4529-8618-759fbca65046",
+        "timestamp": 1795459265914
+      }
+    ],
+    "5. Add `get_due_channels` CRUD function to `app/db/crud.py`": [
+      {
+        "executionId": "a7e9251b-ffb6-4906-a034-c71ab3fe4ecd",
+        "chatSessionId": "sess_90f2443e-a5ed-4529-8618-759fbca65046",
+        "timestamp": 1795458713729
+      },
+      {
+        "executionId": "a7e9251b-ffb6-4906-a034-c71ab3fe4ecd",
+        "chatSessionId": "sess_90f2443e-a5ed-4529-8618-759fbca65046",
+        "timestamp": 1795459197386
+      },
+      {
+        "executionId": "a7e9251b-ffb6-4906-a034-c71ab3fe4ecd",
+        "chatSessionId": "sess_90f2443e-a5ed-4529-8618-759fbca65046",
+        "timestamp": 1795459271402
+      }
+    ],
+    "6. Add `upsert_evidence_message` CRUD function to `app/db/crud.py`": [
+      {
+        "executionId": "a7e9251b-ffb6-4906-a034-c71ab3fe4ecd",
+        "chatSessionId": "sess_90f2443e-a5ed-4529-8618-759fbca65046",
+        "timestamp": 1795458713774
+      },
+      {
+        "executionId": "a7e9251b-ffb6-4906-a034-c71ab3fe4ecd",
+        "chatSessionId": "sess_90f2443e-a5ed-4529-8618-759fbca65046",
+        "timestamp": 1795459276380
+      },
+      {
+        "executionId": "a7e9251b-ffb6-4906-a034-c71ab3fe4ecd",
+        "chatSessionId": "sess_90f2443e-a5ed-4529-8618-759fbca65046",
+        "timestamp": 1795459384669
+      }
+    ],
+    "7. Add `insert_evidence_observation` and read CRUD functions to `app/db/crud.py`": [
+      {
+        "executionId": "a7e9251b-ffb6-4906-a034-c71ab3fe4ecd",
+        "chatSessionId": "sess_90f2443e-a5ed-4529-8618-759fbca65046",
+        "timestamp": 1795458713816
+      },
+      {
+        "executionId": "a7e9251b-ffb6-4906-a034-c71ab3fe4ecd",
+        "chatSessionId": "sess_90f2443e-a5ed-4529-8618-759fbca65046",
+        "timestamp": 1795459280910
+      },
+      {
+        "executionId": "a7e9251b-ffb6-4906-a034-c71ab3fe4ecd",
+        "chatSessionId": "sess_90f2443e-a5ed-4529-8618-759fbca65046",
+        "timestamp": 1795459390260
+      }
+    ],
+    "8. Add `list_evidence_messages` CRUD function to `app/db/crud.py`": [
+      {
+        "executionId": "a7e9251b-ffb6-4906-a034-c71ab3fe4ecd",
+        "chatSessionId": "sess_90f2443e-a5ed-4529-8618-759fbca65046",
+        "timestamp": 1795458713862
+      },
+      {
+        "executionId": "a7e9251b-ffb6-4906-a034-c71ab3fe4ecd",
+        "chatSessionId": "sess_90f2443e-a5ed-4529-8618-759fbca65046",
+        "timestamp": 1795459397780
+      },
+      {
+        "executionId": "a7e9251b-ffb6-4906-a034-c71ab3fe4ecd",
+        "chatSessionId": "sess_90f2443e-a5ed-4529-8618-759fbca65046",
+        "timestamp": 1795459778686
+      }
+    ],
+    "9. Add `set_evidence_message_disposition` CRUD function to `app/db/crud.py`": [
+      {
+        "executionId": "a7e9251b-ffb6-4906-a034-c71ab3fe4ecd",
+        "chatSessionId": "sess_90f2443e-a5ed-4529-8618-759fbca65046",
+        "timestamp": 1795458713904
+      },
+      {
+        "executionId": "a7e9251b-ffb6-4906-a034-c71ab3fe4ecd",
+        "chatSessionId": "sess_90f2443e-a5ed-4529-8618-759fbca65046",
+        "timestamp": 1795459403750
+      },
+      {
+        "executionId": "a7e9251b-ffb6-4906-a034-c71ab3fe4ecd",
+        "chatSessionId": "sess_90f2443e-a5ed-4529-8618-759fbca65046",
+        "timestamp": 1795459784460
+      }
+    ],
+    "10. Create `app/collectors/scheduler.py` with `ChannelScheduler` class": [
+      {
+        "executionId": "a7e9251b-ffb6-4906-a034-c71ab3fe4ecd",
+        "chatSessionId": "sess_90f2443e-a5ed-4529-8618-759fbca65046",
+        "timestamp": 1795458713941
+      },
+      {
+        "executionId": "a7e9251b-ffb6-4906-a034-c71ab3fe4ecd",
+        "chatSessionId": "sess_90f2443e-a5ed-4529-8618-759fbca65046",
+        "timestamp": 1795459789177
+      },
+      {
+        "executionId": "a7e9251b-ffb6-4906-a034-c71ab3fe4ecd",
+        "chatSessionId": "sess_90f2443e-a5ed-4529-8618-759fbca65046",
+        "timestamp": 1795459890887
+      }
+    ],
+    "11. Implement `ChannelScheduler._collect_one` in `app/collectors/scheduler.py`": [
+      {
+        "executionId": "a7e9251b-ffb6-4906-a034-c71ab3fe4ecd",
+        "chatSessionId": "sess_90f2443e-a5ed-4529-8618-759fbca65046",
+        "timestamp": 1795458713978
+      },
+      {
+        "executionId": "a7e9251b-ffb6-4906-a034-c71ab3fe4ecd",
+        "chatSessionId": "sess_90f2443e-a5ed-4529-8618-759fbca65046",
+        "timestamp": 1795459896187
+      }
+    ],
+    "12. Remove `run_forever` from `TelegramCollector` in `app/collectors/telegram_collector.py`": [
+      {
+        "executionId": "a7e9251b-ffb6-4906-a034-c71ab3fe4ecd",
+        "chatSessionId": "sess_90f2443e-a5ed-4529-8618-759fbca65046",
+        "timestamp": 1795458714020
+      },
+      {
+        "executionId": "a7e9251b-ffb6-4906-a034-c71ab3fe4ecd",
+        "chatSessionId": "sess_90f2443e-a5ed-4529-8618-759fbca65046",
+        "timestamp": 1795459902541
+      },
+      {
+        "executionId": "a7e9251b-ffb6-4906-a034-c71ab3fe4ecd",
+        "chatSessionId": "sess_90f2443e-a5ed-4529-8618-759fbca65046",
+        "timestamp": 1795460410461
+      }
+    ],
+    "13. Add evidence writes to `_process_message` in `app/collectors/telegram_collector.py`": [
+      {
+        "executionId": "a7e9251b-ffb6-4906-a034-c71ab3fe4ecd",
+        "chatSessionId": "sess_90f2443e-a5ed-4529-8618-759fbca65046",
+        "timestamp": 1795458714058
+      },
+      {
+        "executionId": "a7e9251b-ffb6-4906-a034-c71ab3fe4ecd",
+        "chatSessionId": "sess_90f2443e-a5ed-4529-8618-759fbca65046",
+        "timestamp": 1795460420343
+      },
+      {
+        "executionId": "a7e9251b-ffb6-4906-a034-c71ab3fe4ecd",
+        "chatSessionId": "sess_90f2443e-a5ed-4529-8618-759fbca65046",
+        "timestamp": 1795460537334
+      }
+    ],
+    "14. Replace `upsert_scan_evidence` calls in `app/collectors/scanner.py`": [
+      {
+        "executionId": "a7e9251b-ffb6-4906-a034-c71ab3fe4ecd",
+        "chatSessionId": "sess_90f2443e-a5ed-4529-8618-759fbca65046",
+        "timestamp": 1795458714103
+      },
+      {
+        "executionId": "a7e9251b-ffb6-4906-a034-c71ab3fe4ecd",
+        "chatSessionId": "sess_90f2443e-a5ed-4529-8618-759fbca65046",
+        "timestamp": 1795460424995
+      },
+      {
+        "executionId": "a7e9251b-ffb6-4906-a034-c71ab3fe4ecd",
+        "chatSessionId": "sess_90f2443e-a5ed-4529-8618-759fbca65046",
+        "timestamp": 1795460545410
+      }
+    ],
+    "15. Update `app/main.py` to use `ChannelScheduler`": [
+      {
+        "executionId": "a7e9251b-ffb6-4906-a034-c71ab3fe4ecd",
+        "chatSessionId": "sess_90f2443e-a5ed-4529-8618-759fbca65046",
+        "timestamp": 1795458714145
+      },
+      {
+        "executionId": "a7e9251b-ffb6-4906-a034-c71ab3fe4ecd",
+        "chatSessionId": "sess_90f2443e-a5ed-4529-8618-759fbca65046",
+        "timestamp": 1795460550652
+      },
+      {
+        "executionId": "a7e9251b-ffb6-4906-a034-c71ab3fe4ecd",
+        "chatSessionId": "sess_90f2443e-a5ed-4529-8618-759fbca65046",
+        "timestamp": 1795460921701
+      }
+    ],
+    "16. Add `next_poll_at` and `channel_status` to `ChannelOut` schema and `PATCH poll-tier` reset in `app/api/channels.py`": [
+      {
+        "executionId": "a7e9251b-ffb6-4906-a034-c71ab3fe4ecd",
+        "chatSessionId": "sess_90f2443e-a5ed-4529-8618-759fbca65046",
+        "timestamp": 1795458714191
+      },
+      {
+        "executionId": "a7e9251b-ffb6-4906-a034-c71ab3fe4ecd",
+        "chatSessionId": "sess_90f2443e-a5ed-4529-8618-759fbca65046",
+        "timestamp": 1795459907358
+      },
+      {
+        "executionId": "a7e9251b-ffb6-4906-a034-c71ab3fe4ecd",
+        "chatSessionId": "sess_90f2443e-a5ed-4529-8618-759fbca65046",
+        "timestamp": 1795460415674
+      }
+    ],
+    "17. Create `app/api/evidence_v2.py` with list and detail endpoints": [
+      {
+        "executionId": "a7e9251b-ffb6-4906-a034-c71ab3fe4ecd",
+        "chatSessionId": "sess_90f2443e-a5ed-4529-8618-759fbca65046",
+        "timestamp": 1795458714240
+      },
+      {
+        "executionId": "a7e9251b-ffb6-4906-a034-c71ab3fe4ecd",
+        "chatSessionId": "sess_90f2443e-a5ed-4529-8618-759fbca65046",
+        "timestamp": 1795460861036
+      },
+      {
+        "executionId": "a7e9251b-ffb6-4906-a034-c71ab3fe4ecd",
+        "chatSessionId": "sess_90f2443e-a5ed-4529-8618-759fbca65046",
+        "timestamp": 1795460927919
+      }
+    ],
+    "18. Add disposition endpoint to `app/api/evidence_v2.py`": [
+      {
+        "executionId": "a7e9251b-ffb6-4906-a034-c71ab3fe4ecd",
+        "chatSessionId": "sess_90f2443e-a5ed-4529-8618-759fbca65046",
+        "timestamp": 1795458714290
+      },
+      {
+        "executionId": "a7e9251b-ffb6-4906-a034-c71ab3fe4ecd",
+        "chatSessionId": "sess_90f2443e-a5ed-4529-8618-759fbca65046",
+        "timestamp": 1795460934345
+      }
+    ],
+    "19. Register `evidence_v2` router in `app/main.py`": [
+      {
+        "executionId": "a7e9251b-ffb6-4906-a034-c71ab3fe4ecd",
+        "chatSessionId": "sess_90f2443e-a5ed-4529-8618-759fbca65046",
+        "timestamp": 1795458714333
+      },
+      {
+        "executionId": "a7e9251b-ffb6-4906-a034-c71ab3fe4ecd",
+        "chatSessionId": "sess_90f2443e-a5ed-4529-8618-759fbca65046",
+        "timestamp": 1795460940464
+      },
+      {
+        "executionId": "a7e9251b-ffb6-4906-a034-c71ab3fe4ecd",
+        "chatSessionId": "sess_90f2443e-a5ed-4529-8618-759fbca65046",
+        "timestamp": 1795461058014
+      }
+    ],
+    "20. Checkpoint — run tests and verify baseline": [
+      {
+        "executionId": "a7e9251b-ffb6-4906-a034-c71ab3fe4ecd",
+        "chatSessionId": "sess_90f2443e-a5ed-4529-8618-759fbca65046",
+        "timestamp": 1795458714388
+      },
+      {
+        "executionId": "a7e9251b-ffb6-4906-a034-c71ab3fe4ecd",
+        "chatSessionId": "sess_90f2443e-a5ed-4529-8618-759fbca65046",
+        "timestamp": 1795461063268
+      },
+      {
+        "executionId": "a7e9251b-ffb6-4906-a034-c71ab3fe4ecd",
+        "chatSessionId": "sess_90f2443e-a5ed-4529-8618-759fbca65046",
+        "timestamp": 1795461225879
+      }
+    ],
+    "23. Final checkpoint — full test suite and import verification": [
+      {
+        "executionId": "a7e9251b-ffb6-4906-a034-c71ab3fe4ecd",
+        "chatSessionId": "sess_90f2443e-a5ed-4529-8618-759fbca65046",
+        "timestamp": 1795458714442
+      },
+      {
+        "executionId": "a7e9251b-ffb6-4906-a034-c71ab3fe4ecd",
+        "chatSessionId": "sess_90f2443e-a5ed-4529-8618-759fbca65046",
+        "timestamp": 1795461231425
+      },
+      {
+        "executionId": "aaf6746d-5686-4c28-84d1-2086da857edf",
+        "chatSessionId": "sess_90f2443e-a5ed-4529-8618-759fbca65046",
+        "timestamp": 1795461528619
+      }
+    ],
+    "21. Write property tests in `backend/tests/test_scheduler_evidence_properties.py`": [
+      {
+        "executionId": "aaf6746d-5686-4c28-84d1-2086da857edf",
+        "chatSessionId": "sess_90f2443e-a5ed-4529-8618-759fbca65046",
+        "timestamp": 1795461545205
+      },
+      {
+        "executionId": "aaf6746d-5686-4c28-84d1-2086da857edf",
+        "chatSessionId": "sess_90f2443e-a5ed-4529-8618-759fbca65046",
+        "timestamp": 1795462429973
+      }
+    ],
+    "22. Write example/unit tests in `backend/tests/test_scheduler_evidence_examples.py`": [
+      {
+        "executionId": "aaf6746d-5686-4c28-84d1-2086da857edf",
+        "chatSessionId": "sess_90f2443e-a5ed-4529-8618-759fbca65046",
+        "timestamp": 1795461550575
+      },
+      {
+        "executionId": "aaf6746d-5686-4c28-84d1-2086da857edf",
+        "chatSessionId": "sess_90f2443e-a5ed-4529-8618-759fbca65046",
+        "timestamp": 1795462435167
+      }
+    ]
+  }
+}

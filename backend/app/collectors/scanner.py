@@ -27,7 +27,7 @@ from app.services.scoring_service import compute_composite_score, save_channel_s
 
 logger = logging.getLogger(__name__)
 
-from app.services.seed_defaults import DEFAULT_SEED_CATALOGUE
+from app.services.seed_defaults import DEFAULT_SEED_CATALOGUE, DISCOVERY_SEED_CATALOGUE
 
 SCAN_MESSAGES_PER_CHANNEL = 100
 SCAN_MAX_CHANNELS_PER_SEED = 15
@@ -36,6 +36,7 @@ TELEGRAM_CONNECT_TIMEOUT_SECONDS = 20
 TELEGRAM_SEARCH_TIMEOUT_SECONDS = 30
 
 DEFAULT_SEEDS: List[str] = [entry["seed_text"] for entry in DEFAULT_SEED_CATALOGUE]
+DISCOVERY_SEEDS: List[str] = [entry["seed_text"] for entry in DISCOVERY_SEED_CATALOGUE]
 
 # Active background tasks keyed by job_id so we can track them
 _active_tasks: Dict[int, asyncio.Task] = {}
@@ -56,7 +57,9 @@ async def trigger_scan(
             db_profiles = list(
                 await list_seed_profiles(db, is_active=True, profile=profile, status="active")
             )
-        seeds = [p.seed_text for p in db_profiles] if db_profiles else list(DEFAULT_SEEDS)
+        seeds = [p.seed_text for p in db_profiles] if db_profiles else (
+            list(DISCOVERY_SEEDS) if profile == "discovery" else list(DEFAULT_SEEDS)
+        )
 
     async with get_session() as db:
         job = ScanJob(
