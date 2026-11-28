@@ -103,12 +103,15 @@ async def _resolve_channel(identifier: str, db: AsyncSession):
 
     if not scan_res:
         target_user = ch.username if ch else clean_id
+        # A channel may have MULTIPLE scan-result rows (re-scans) — always
+        # take the latest one instead of raising MultipleResultsFound.
         scan_q = await db.execute(
             select(ChannelScanResult)
             .where(ChannelScanResult.channel_username.ilike(target_user))
             .order_by(ChannelScanResult.scanned_at.desc())
+            .limit(1)
         )
-        scan_res = scan_q.scalar_one_or_none()
+        scan_res = scan_q.scalars().first()
 
     if not ch and not scan_res:
         raise HTTPException(status_code=404, detail=f"Channel @{clean_id} not found")

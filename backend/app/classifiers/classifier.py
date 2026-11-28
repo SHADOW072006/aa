@@ -102,8 +102,19 @@ _ANCHOR_WEIGHT = 0.80
 _STRONG_INTENT = (
     r"for\s+sale|sale|on\s+rent|rent|rental|wanted|commission|supplier|supply|stock|"
     r"order\s+now|buy\s+now|selling|sell|chahiye|चाहिए|bikau|kiraye|kiraya|lena\s+hai|dena\s+hai|"
-    r"deni\s+hai|len\s+den|बिकाऊ|किराए|सप्लाई|wholesale|bulk\s+(?:order|rate|me)"
+    r"deni\s+hai|len\s+den|बिकाऊ|किराए|सप्लाई|wholesale|bulk\s+(?:order|rate|me)|claim\s+now"
 )
+
+# ── OTP/social-engineering whitelist ─────────────────────────────────────────
+# These scams-lexicon terms are high-signal fraud language (OTP harvesting,
+# KYC-extortion) — flagged even in the illegal_trade profile, which otherwise
+# skips the scams lexicon entirely.
+_FRAUD_WHITELIST: Set[str] = {
+    "otp share karo", "otp batao", "otp bhejo", "otp send karo",
+    "bank otp", "aadhar otp", "kyc update karo", "send otp", "share otp",
+    "verify otp", "otp verification", "kyc pending", "kyc expired",
+    "sim swap service", "otp bot",
+}
 
 # ── Intent, CTA/payment, and negative-context patterns ────────────────────────
 _SALE_INTENT_RE = re.compile(
@@ -318,7 +329,11 @@ def lexicon_score(
         if term in seen:
             continue
         cat, wt, lex = store.terms[term]
-        if profile == "illegal_trade" and (lex == "scams" or cat in PETTY_CATEGORIES):
+        if (
+            profile == "illegal_trade"
+            and (lex == "scams" or cat in PETTY_CATEGORIES)
+            and term not in _FRAUD_WHITELIST
+        ):
             continue
         if _matches_word_boundary(term, norm):
             # A benign collocation ("TXN hash", "weed killer", "coca cola")

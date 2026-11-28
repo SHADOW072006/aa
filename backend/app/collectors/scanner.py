@@ -3,6 +3,7 @@ import json
 import logging
 from collections import Counter
 from datetime import datetime
+from pathlib import Path
 from typing import Dict, List, Optional, Set
 
 from telethon.errors import ChannelPrivateError, FloodWaitError, UsernameInvalidError, UsernameNotOccupiedError
@@ -11,6 +12,7 @@ from telethon.tl.types import Channel, Chat
 
 from app.classifiers.classifier import classify
 from app.core.config import settings
+from app.collectors.import_handler import _cached_ocr, _image_phash
 from app.db.crud import (
     list_seed_profiles,
     get_variants_for_seed,
@@ -22,6 +24,7 @@ from app.db.crud import (
 from app.db.database import get_session
 from app.db.models import ChannelScanResult, ScanJob
 from app.extractors.identifier_extractor import extract
+from app.services.evidence_hashing import compute_media_hash
 from app.services.pivot_service import extract_pivot_candidates, save_pivot_candidates
 from app.services.scoring_service import compute_composite_score, save_channel_score
 
@@ -34,6 +37,10 @@ SCAN_MAX_CHANNELS_PER_SEED = 15
 SCAN_RATE_LIMIT_SECONDS = 1.5
 TELEGRAM_CONNECT_TIMEOUT_SECONDS = 20
 TELEGRAM_SEARCH_TIMEOUT_SECONDS = 30
+# Image-only ads are the majority in this genre — download and OCR a bounded
+# number of photos per channel so they reach the classifier instead of
+# silently vanishing.
+SCAN_OCR_MAX_IMAGES = 20
 
 DEFAULT_SEEDS: List[str] = [entry["seed_text"] for entry in DEFAULT_SEED_CATALOGUE]
 DISCOVERY_SEEDS: List[str] = [entry["seed_text"] for entry in DISCOVERY_SEED_CATALOGUE]
@@ -341,12 +348,45 @@ async def _scan_one_channel(
     pending_evidence: List[dict] = []
 
     try:
+        ocr_budget = SCAN_OCR_MAX_IMAGES
+        media_dir: Optional[Path] = None
+        username_slug = __import__("re").sub(r"[^A-Za-z0-9_-]", "", username)[:40] or "chan"
+
         async for msg in client.iter_messages(username, limit=SCAN_MESSAGES_PER_CHANNEL):
-            text = getattr(msg, "message", None) or ""
-            if not text.strip():
+            text = (getattr(msg, "message", None) or "").strip()
+            photo = getattr(msg, "photo", None)
+            ocr_text: Optional[str] = None
+            media_path: Optional[str] = None
+            media_hash: Optional[str] = None
+            phash: Optional[str] = None
+
+            # Image-only (or captioned) posts: download a bounded number of
+            # photos and OCR them so posters reach the classifier — previously
+            # every photo-only ad silently vanished from scan results.
+            if photo is not None and ocr_budget > 0:
+                ocr_budget -= 1
+                try:
+                    if media_dir is None:
+                        media_dir = Path(settings.IMPORT_MEDIA_ROOT).resolve() / "scan_media" / username_slug
+                        media_dir.mkdir(parents=True, exist_ok=True)
+                    downloaded = await client.download_media(
+                        msg, file=str(media_dir / str(getattr(msg, "id", "img")))
+                    )
+                    if downloaded:
+                        media_path = str(downloaded)
+                        media_hash = compute_media_hash(downloaded)
+                        phash = _image_phash(downloaded)
+                        ocr_text = (await _cached_ocr(Path(downloaded), media_hash) or "").strip() or None
+                except FloodWaitError:
+                    raise
+                except Exception as exc:
+                    logger.debug("Media OCR failed for @%s msg=%s: %s", username, getattr(msg, "id", "?"), exc)
+
+            combined_text = " ".join(filter(None, [text, ocr_text]))
+            if not combined_text.strip():
                 continue
 
-            r = classify(text)
+            r = classify(combined_text)
             scores.append(r.score)
 
             if r.risk_level == "HIGH":
@@ -357,14 +397,14 @@ async def _scan_one_channel(
             for cat in r.categories:
                 category_counter[cat] += 1
 
-            extracted_idents = extract(text)
+            extracted_idents = extract(combined_text)
             for ident in extracted_idents:
                 identifier_counter[(ident.type, ident.normalised)] += 1
                 if ident.type == "phone":
                     connected_phones.add(ident.normalised)
                 elif ident.type == "upi":
                     connected_upis.add(ident.normalised)
-                elif ident.type in ("wallet_btc", "wallet_eth", "wallet_usdt"):
+                elif ident.type in ("wallet_btc", "wallet_eth", "wallet_usdt", "bank_account"):
                     connected_wallets.add(f"{ident.type}:{ident.normalised}")
                 elif ident.type == "handle":
                     norm_h = ident.normalised.lstrip("@")
@@ -393,10 +433,12 @@ async def _scan_one_channel(
                 msg_date = getattr(msg, "date", None)
                 matched_terms = [t["term"] for t in r.evidence.get("matched_terms", [])] if r.evidence else []
                 sender_user = getattr(msg.sender, "username", None) if hasattr(msg, "sender") and msg.sender else None
+                display_text = text or (f"[OCR] {ocr_text}" if ocr_text else "")
                 sample_msgs.append({
                     "id": getattr(msg, "id", None),
                     "date": msg_date.isoformat() if msg_date else None,
-                    "text": text[:800],
+                    "text": display_text[:800],
+                    "ocr_text": ocr_text,
                     "score": round(r.score, 3),
                     "categories": r.categories,
                     "risk_level": r.risk_level,
@@ -405,6 +447,7 @@ async def _scan_one_channel(
                     "forwards": getattr(msg, "forwards", None),
                     "fwd_source": fwd_source,
                     "sender_username": sender_user,
+                    "media_hash": media_hash,
                 })
 
             # Collect evidence for messages above threshold (Requirements: 3.1)
@@ -413,6 +456,10 @@ async def _scan_one_channel(
                 pending_evidence.append({
                     "telegram_message_id": message_id,
                     "raw_text": text,
+                    "ocr_text": ocr_text,
+                    "media_path": media_path,
+                    "media_hash": media_hash,
+                    "phash": phash,
                     "normalised_text": r.normalised_text,
                     "classifier_score": r.score,
                     "risk_level": r.risk_level,
@@ -572,9 +619,12 @@ async def _scan_one_channel(
                     channel_username=username,
                     telegram_message_id=message_id,
                     raw_text=ev["raw_text"],
+                    ocr_text=ev.get("ocr_text"),
+                    media_path=ev.get("media_path"),
+                    media_hash=ev.get("media_hash"),
                     normalised_text=ev["normalised_text"],
                     message_timestamp=ev.get("message_timestamp"),
-                    ocr_outcome="not_applicable",
+                    ocr_outcome="success" if ev.get("ocr_text") else ("skipped" if ev.get("media_path") else "not_applicable"),
                 )
                 obs = await insert_evidence_observation(
                     db,
